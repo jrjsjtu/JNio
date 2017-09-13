@@ -37,6 +37,14 @@ public class HeadContext extends DefaultChannelHandlerContext{
         return null;
     }
 
+
+    @Override
+    public ChannelFuture writeAndFlush(Object msg){
+        AbstractChannelHandlerContext ctx = findNextOutbound();
+        ctx.writeAndFlush(msg);
+        return null;
+    }
+
     private static class HeadHandler implements ChannelInboundHandler,ChannelOutboundHandler{
         Channel channel;
         HeadHandler(Channel channel){

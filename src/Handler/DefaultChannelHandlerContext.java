@@ -25,7 +25,7 @@ public class DefaultChannelHandlerContext extends AbstractChannelHandlerContext 
     @Override
     public ChannelHandlerContext fireChannelRead(Object msg) {
         try {
-            handler.channelRead(this,msg);
+            ((ChannelInboundHandler)handler).channelRead(this,msg);
         } catch (Exception e) {
             e.printStackTrace();
         }

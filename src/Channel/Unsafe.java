@@ -21,6 +21,9 @@ public interface Unsafe {
      * Register the {@link Channel} of the {@link ChannelPromise} and notify
      * the {@link ChannelFuture} once the registration was complete.
      */
+
+    void deregister(ChannelPromise promise);
+
     void register(EventLoop eventLoop, ChannelPromise promise);
 
     /**

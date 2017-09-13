@@ -4,6 +4,7 @@ import Channel.Channel;
 import EventLoop.EventLoop;
 import FutureAndPromise.ChannelFuture;
 import FutureAndPromise.ChannelPromise;
+import FutureAndPromise.DefaultChannelPromise;
 import JPipeline.ChannelPipeline;
 import JPipeline.DefaultChannelPipeline;
 
@@ -64,7 +65,9 @@ public abstract class AbstractChannelHandlerContext implements ChannelHandlerCon
 
     @Override
     public ChannelHandlerContext fireChannelInactive() {
-        return null;
+        AbstractChannelHandlerContext nextInbound = findNextInbound();
+        nextInbound.fireChannelInactive();
+        return this;
     }
 
     @Override
@@ -146,7 +149,14 @@ public abstract class AbstractChannelHandlerContext implements ChannelHandlerCon
      */
     @Override
     public ChannelFuture writeAndFlush(Object msg){
-        return null;
+        AbstractChannelHandlerContext ctx = findNextOutbound();
+        DefaultChannelPromise defaultChannelPromise = new DefaultChannelPromise();
+        try {
+            ((ChannelOutboundHandler)ctx.handler()).write(ctx,msg,defaultChannelPromise);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return defaultChannelPromise;
     }
     @Override
     public ChannelPipeline pipeline() {

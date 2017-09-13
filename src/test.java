@@ -35,6 +35,7 @@ public class test {
     public static class echoServer extends ChannelInboundHandlerAdapter{
         @Override
         public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+            ctx.writeAndFlush(msg);
             System.out.println(msg.toString());
         }
     }

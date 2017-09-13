@@ -116,7 +116,8 @@ public class DefaultChannelPipeline implements  ChannelPipeline{
 
     @Override
     public ChannelPipeline fireChannelInactive() {
-        return null;
+        head.fireChannelInactive();
+        return this;
     }
 
     @Override
@@ -132,7 +133,7 @@ public class DefaultChannelPipeline implements  ChannelPipeline{
     @Override
     public ChannelPipeline fireChannelRead(Object msg) {
         head.fireChannelRead(msg);
-        return null;
+        return this;
     }
 
     @Override

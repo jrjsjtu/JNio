@@ -44,6 +44,15 @@ public abstract class AbstractNioChannel extends AbstractChannel{
         }
 
         @Override
+        public void deregister(ChannelPromise promise) {
+            try {
+                selectableChannel.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+        @Override
         public void bind(SocketAddress localAddress, ChannelPromise promise) {
 
         }
@@ -60,8 +69,10 @@ public abstract class AbstractNioChannel extends AbstractChannel{
 
         @Override
         public void write(Object msg, ChannelPromise promise) {
+            ((ByteBuffer)msg).flip();
             try {
-                ((SocketChannel)selectableChannel).write((ByteBuffer) msg);
+                int bytes = ((SocketChannel)selectableChannel).write((ByteBuffer) msg);
+                System.out.println("we write " + bytes +" bytes");
             } catch (IOException e) {
                 e.printStackTrace();
             }

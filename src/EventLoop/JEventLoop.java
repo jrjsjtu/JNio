@@ -7,6 +7,7 @@ import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.nio.channels.spi.SelectorProvider;
+import java.util.Iterator;
 import java.util.concurrent.*;
 import EventLoopGroup.EventLoopGroup;
 import Channel.Channel;
@@ -36,17 +37,20 @@ public class JEventLoop extends  SingleThreadEventLoop {
         thread.start();
     }
 
+
     @Override
     public void run() {
         int nKeys = -1;
         for (; ; ) {
             try {
-                nKeys = selector.select(1000);
+                nKeys = selector.select();
             } catch (Exception e) {
                 e.printStackTrace();
             }
             if (nKeys > 0) {
-                for (SelectionKey key : selector.selectedKeys()) {
+                Iterator<SelectionKey> iter = selector.selectedKeys().iterator();
+                while (iter.hasNext()){
+                    SelectionKey key = iter.next();
                     if (key.isAcceptable()){
                         try {
                             SocketChannel clientChannel = ((ServerSocketChannel) key.channel()).accept();
@@ -57,22 +61,27 @@ public class JEventLoop extends  SingleThreadEventLoop {
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
-                    }
-                    if (key.isReadable()) {
+                    }else if(key.isReadable()) {
                         ByteBuffer buffer = ByteBuffer.allocate(1024*64);
                         SocketChannel sc = (SocketChannel) key.channel();
                         Channel channel = (Channel) key.attachment();
                         try {
-                            sc.read(buffer);
-                            channel.pipeline().fireChannelRead(buffer);
+                            int num = sc.read(buffer);
+                            if (num>0){
+                                channel.pipeline().fireChannelRead(buffer);
+                            }else{
+                                channel.pipeline().fireChannelInactive();
+                            }
                         }catch (Exception e){
                             e.printStackTrace();
                         } finally{
                             if (buffer != null)
                                 buffer.clear();
                         }
+                    }else{
                     }
                 }
+                iter.remove();
             }
             while (hasTask()){
                 try {
@@ -110,6 +119,7 @@ public class JEventLoop extends  SingleThreadEventLoop {
                 channel.unsafe().register(curLoop,defaultChannelPromise);
             }
         });
+        wakeUpSelector();
         return defaultChannelPromise;
     }
 }

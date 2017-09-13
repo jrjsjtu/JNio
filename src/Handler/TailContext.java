@@ -2,6 +2,7 @@ package Handler;
 
 import Channel.Channel;
 import EventLoop.EventLoop;
+import FutureAndPromise.DefaultChannelPromise;
 import JPipeline.DefaultChannelPipeline;
 
 /**
@@ -24,6 +25,13 @@ public class TailContext extends DefaultChannelHandlerContext {
         tmp.next = ctx;
         ctx.prev = tmp;
     }
+
+    @Override
+    public ChannelHandlerContext fireChannelInactive() {
+        channel.unsafe().deregister(new DefaultChannelPromise());
+        return this;
+    }
+
     private static class TailHandler implements ChannelInboundHandler{
         Channel channel;
         TailHandler(Channel channel){

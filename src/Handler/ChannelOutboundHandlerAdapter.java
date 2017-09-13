@@ -53,10 +53,6 @@ public class ChannelOutboundHandlerAdapter implements ChannelOutboundHandler {
 
     }
 
-    @Override
-    public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-
-    }
 
     @Override
     public void handlerRemoved(ChannelHandlerContext ctx) throws Exception {
