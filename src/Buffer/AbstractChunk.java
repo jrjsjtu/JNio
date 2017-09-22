@@ -12,23 +12,24 @@ public class AbstractChunk implements JChunk {
     int pageSize;
     byte[] memoryMap,depthMap;
     int usage = 0;
-    int pageNum;
     int pageShifts;
     int maxOrder;
     int log2ChunkSize;
+    private final int maxSubpageAllocs;
+    private final byte unusable;
+
     ByteBuffer chunkByteBuffer;
     JBufferPool jBufferPool;
-    private final byte unusable;
     //AbstractChunk(int pageSize,int chunkSize,JBufferPool jBufferPool){
     AbstractChunk(int pageSize,int chunkSize){
         this.pageSize = pageSize;
-        pageNum = chunkSize / pageSize;
-        maxOrder = log2(pageNum);
+        maxSubpageAllocs = chunkSize / pageSize;
+        maxOrder = log2(maxSubpageAllocs);
         unusable = (byte) (maxOrder + 1);
         pageShifts = log2(pageSize);
         //memoryMap中的值代表第几层可用
-        memoryMap = new byte[pageNum<<1];
-        depthMap = new byte[pageNum<<1];
+        memoryMap = new byte[maxSubpageAllocs<<1];
+        depthMap = new byte[maxSubpageAllocs<<1];
         log2ChunkSize = log2(chunkSize);
         chunkByteBuffer = JAllocator.allocateDirect(chunkSize);
         //this.jBufferPool = jBufferPool;
@@ -46,7 +47,7 @@ public class AbstractChunk implements JChunk {
 
     @Override
     public int GetUsage() {
-        return usage*100/pageNum;
+        return usage*100/maxSubpageAllocs;
     }
 
     @Override
@@ -136,8 +137,20 @@ public class AbstractChunk implements JChunk {
             id = parentId;
         }
     }
+
+    private int runOffset(int id) {
+        //往里面输的是memorymapIdx,就是说这个节点所代表的buffer在整个内存块里的偏移值(2048->0,2049->8192,1024->0,1025->16384)
+        // represents the 0-based offset in #bytes from start of the byte-array chunk
+        int shift = id ^ 1 << depth(id);
+        return shift * runLength(id);
+    }
+
+    private int subpageIdx(int memoryMapIdx) {
+        return memoryMapIdx ^ maxSubpageAllocs; // remove highest set bit, to get offset
+    }
+
     public static void main(String[] args){
         AbstractChunk abstractChunk = new AbstractChunk(8192,8192*2048);
-        System.out.println(abstractChunk.allocateNode(abstractChunk.getDepth(8192*2)));
+        System.out.println(abstractChunk.subpageIdx(2049));
     }
 }
