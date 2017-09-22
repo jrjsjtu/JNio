@@ -6,6 +6,7 @@ import java.nio.ByteBuffer;
  * Created by jrj on 17-9-15.
  */
 public abstract class AbstractBuffer implements JBuffer {
+    //代理模式的AbstractBuffer
     ByteBuffer innerBuffer;
     AbstractBuffer(ByteBuffer innerBuffer){
         this.innerBuffer = innerBuffer;
@@ -14,7 +15,6 @@ public abstract class AbstractBuffer implements JBuffer {
     public void put() {
 
     }
-    ThreadLocal
     @Override
     public void get(byte[] bytes) {
         innerBuffer.get(bytes);

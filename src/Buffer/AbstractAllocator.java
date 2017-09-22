@@ -9,7 +9,7 @@ import static Buffer.JChunk.rTinyMask;
 public abstract class AbstractAllocator implements JAllocator {
     static JBufferPool jBufferPool;
     static{
-
+        jBufferPool = new DefaultBufferPool();
     }
     @Override
     public JBuffer allocator(int capacity) {

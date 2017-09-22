@@ -12,5 +12,4 @@ public interface JChunk {
     int rSmallMask = 0xFFFFE000;
     int GetUsage();
     JBuffer ApplyBuffer(int capacity);
-
 }
