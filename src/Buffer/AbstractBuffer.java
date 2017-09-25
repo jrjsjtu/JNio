@@ -8,8 +8,10 @@ import java.nio.ByteBuffer;
 public abstract class AbstractBuffer implements JBuffer {
     //代理模式的AbstractBuffer
     ByteBuffer innerBuffer;
-    AbstractBuffer(ByteBuffer innerBuffer){
+    long handle;
+    AbstractBuffer(ByteBuffer innerBuffer,long handle){
         this.innerBuffer = innerBuffer;
+        this.handle = handle;
     }
     @Override
     public void put() {

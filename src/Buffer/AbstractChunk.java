@@ -9,7 +9,7 @@ public class AbstractChunk implements JChunk {
     //这里简化一下实现，当要申请的页大于pageSize时，只能申请pageSize的整数倍。
     //考虑到实现的复杂度，先做这样的简化。
     //实际上通过我看的博客，感觉netty也是这么实现的。那么8193的申请内存就会被安排一块8192×2的内存。。惊了
-    int pageSize;
+    int pageSize,chunkSize;
     byte[] memoryMap,depthMap;
     int usage = 0;
     int pageShifts;
@@ -17,13 +17,15 @@ public class AbstractChunk implements JChunk {
     int log2ChunkSize;
     private final int maxSubpageAllocs;
     private final byte unusable;
-
-    ByteBuffer chunkByteBuffer;
-    JBufferPool jBufferPool;
+    PoolSubpage<ByteBuf>[] subpages;
+    ByteBuffer bufferInAll;
+    JChunk prev,next;
     //AbstractChunk(int pageSize,int chunkSize,JBufferPool jBufferPool){
-    AbstractChunk(int pageSize,int chunkSize){
-        this.pageSize = pageSize;
+    AbstractChunk(int pageSize,int chunkSize,ByteBuffer bufferInAll){
+        this.pageSize = pageSize;this.chunkSize = chunkSize;
+        this.bufferInAll = bufferInAll;
         maxSubpageAllocs = chunkSize / pageSize;
+        subpages = new PoolSubpage[maxSubpageAllocs];
         maxOrder = log2(maxSubpageAllocs);
         unusable = (byte) (maxOrder + 1);
         pageShifts = log2(pageSize);
@@ -31,7 +33,6 @@ public class AbstractChunk implements JChunk {
         memoryMap = new byte[maxSubpageAllocs<<1];
         depthMap = new byte[maxSubpageAllocs<<1];
         log2ChunkSize = log2(chunkSize);
-        chunkByteBuffer = JAllocator.allocateDirect(chunkSize);
         //this.jBufferPool = jBufferPool;
         int memoryMapIndex = 1;
         for (int d = 0; d <= maxOrder; ++ d) { // move down the tree one level at a time
@@ -46,18 +47,50 @@ public class AbstractChunk implements JChunk {
     }
 
     @Override
-    public int GetUsage() {
+    public int getUsage() {
         return usage*100/maxSubpageAllocs;
     }
 
+
     @Override
-    public JBuffer ApplyBuffer(int capacity) {
-        int depth = getDepth(capacity);
-        int handle = allocateNode(depth);
-        return null;
+    public ByteBuf ApplyBufferByHandle(int handle) {
+        int offset = runOffset(handle);
+        bufferInAll.position(offset);
+        bufferInAll.limit(offset+pageSize);
+        ByteBuffer tmp = bufferInAll.slice();
+        tmp.limit(pageSize);
+        return new ByteBuf(tmp,handle);
     }
 
-    private int allocateNode(int d) {
+    @Override
+    public ByteBuf ApplyBufferByCapacity(int capacity) {
+        int handle = getHandle(capacity);
+        return ApplyBufferByHandle(handle);
+    }
+
+    @Override
+    public int getHandle(int capacity){
+        int depth = getDepth(capacity);
+        int handle = allocateNode(depth);
+        return handle;
+    }
+
+    @Override
+    public void setNext(JChunk jChunk) {
+        next = jChunk;
+    }
+
+    @Override
+    public void setPrev(JChunk jChunk) {
+        prev = jChunk;
+    }
+
+    @Override
+    public JChunk getNext() {
+        return next;
+    }
+
+    int allocateNode(int d) {
         int id = 1;
         int initial = - (1 << d); // has last d bits = 0 and rest all = 1
         byte val = value(id);
@@ -111,6 +144,7 @@ public class AbstractChunk implements JChunk {
 
     private int runLength(int id) {
         // represents the size in #bytes supported by node 'id' in the tree
+        //2048-> 8192,1024->8192*2,512->8192*4
         return 1 << log2ChunkSize - depth(id);
     }
 
@@ -150,7 +184,7 @@ public class AbstractChunk implements JChunk {
     }
 
     public static void main(String[] args){
-        AbstractChunk abstractChunk = new AbstractChunk(8192,8192*2048);
-        System.out.println(abstractChunk.subpageIdx(2049));
+        AbstractChunk abstractChunk = new AbstractChunk(8192,8192*2048,ByteBuffer.allocate(8192*2048));
+        System.out.println(abstractChunk.runLength(512));
     }
 }

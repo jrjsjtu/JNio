@@ -1,5 +1,7 @@
 package Buffer;
 
+import java.nio.ByteBuffer;
+
 import static Buffer.JChunk.rSmallMask;
 import static Buffer.JChunk.rTinyMask;
 
@@ -7,23 +9,29 @@ import static Buffer.JChunk.rTinyMask;
  * Created by jrj on 17-9-15.
  */
 public abstract class AbstractAllocator implements JAllocator {
-    static JBufferPool jBufferPool;
-    static{
-        jBufferPool = new DefaultBufferPool();
+    JBufferPool jBufferPool;
+
+    AbstractAllocator(int pageSize, int chunkSize, ByteBuffer byteBuffer){
+        jBufferPool = new DefaultBufferPool(pageSize,chunkSize,byteBuffer);
     }
+
     @Override
     public JBuffer allocator(int capacity) {
         int normalCapacity = normalizeCapacity(capacity);
+        JBuffer outBuffer;
+        //先尝试在本地缓存取得内存，失败后向BufferPool申请内存
+        //本地缓存用ThreadLocal实现
         if (isTiny(normalCapacity)){
-            JBuffer outBuffer = findTinyInThreadlocal(normalCapacity);
-            return outBuffer==null?allocatTiny(normalCapacity):outBuffer;
+            outBuffer = findTinyInThreadlocal(normalCapacity);
         }else if(isSmall(normalCapacity)){
-            JBuffer outBuffer = findSmallInThreadlocal(normalCapacity);
-            return outBuffer==null?allocatSmall(normalCapacity):outBuffer;
+            outBuffer = findSmallInThreadlocal(normalCapacity);
         }else{
-            JBuffer outBuffer = findNormalInThreadlocal(normalCapacity);
-            return outBuffer==null?allocatNormal(normalCapacity):outBuffer;
+            outBuffer = findNormalInThreadlocal(normalCapacity);
         }
+        if (outBuffer == null){
+            outBuffer = jBufferPool.AllocateBuffer(normalCapacity);
+        }
+        return outBuffer;
     }
 
     public JBuffer allocatTiny(int capacity){
@@ -49,6 +57,7 @@ public abstract class AbstractAllocator implements JAllocator {
     public JBuffer findNormalInThreadlocal(int capacity){
         return null;
     }
+
     protected int normalizeCapacity(int reqCapacity){
         if (!isTiny(reqCapacity)) { // >= 512
             // Doubled
