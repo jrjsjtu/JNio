@@ -9,4 +9,6 @@ public interface JBuffer {
     void flip();
     void rewind();
     void clear();
+    void free();
+    JBuffer allocateSubpage(int startPostion,int size);
 }

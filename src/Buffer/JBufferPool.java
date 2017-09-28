@@ -8,4 +8,6 @@ public interface JBufferPool {
     void AddBuffer(JBuffer buffer);
     void AddTinyBuffer(JBuffer buffer);
     void AddSmallBuffer(JBuffer buffer);
+    void addPool(PoolSubpage poolSubpage,int elementSize);
+    void removePool(PoolSubpage poolSubpage,int elementSize);
 }

@@ -8,11 +8,11 @@ import static Buffer.JChunk.rTinyMask;
 /**
  * Created by jrj on 17-9-15.
  */
-public abstract class AbstractAllocator implements JAllocator {
+public class AbstractAllocator implements JAllocator {
     JBufferPool jBufferPool;
 
-    AbstractAllocator(int pageSize, int chunkSize, ByteBuffer byteBuffer){
-        jBufferPool = new DefaultBufferPool(pageSize,chunkSize,byteBuffer);
+    AbstractAllocator(int pageSize, int chunkSize){
+        jBufferPool = new DefaultBufferPool(pageSize,chunkSize);
     }
 
     @Override
@@ -84,11 +84,16 @@ public abstract class AbstractAllocator implements JAllocator {
         return (reqCapacity & ~15) + 16;
     }
 
-    protected boolean isTiny(int capacity){
+    static boolean isTiny(int capacity){
         return ((capacity&rTinyMask)==0)?true:false;
     }
 
-    protected boolean isSmall(int capacity){
+    static boolean isSmall(int capacity){
         return ((capacity&rSmallMask)==0)?true:false;
+    }
+
+    public static void main(String[] args){
+        AbstractAllocator abstractAllocator = new AbstractAllocator(8192,8192*1024);
+        abstractAllocator.allocator(32);
     }
 }

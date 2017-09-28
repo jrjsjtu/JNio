@@ -19,4 +19,6 @@ public interface JChunk {
     JChunk getNext();
     ByteBuf ApplyBufferByHandle(int handle);
     ByteBuf ApplyBufferByCapacity(int capacity);
+    void free(long handle);
+    JBufferPool getBufferPool();
 }

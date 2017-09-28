@@ -20,8 +20,9 @@ public class AbstractChunk implements JChunk {
     PoolSubpage<ByteBuf>[] subpages;
     ByteBuffer bufferInAll;
     JChunk prev,next;
+    JBufferPool jBufferPool;
     //AbstractChunk(int pageSize,int chunkSize,JBufferPool jBufferPool){
-    AbstractChunk(int pageSize,int chunkSize,ByteBuffer bufferInAll){
+    AbstractChunk(int pageSize,int chunkSize,ByteBuffer bufferInAll,JBufferPool jBufferPool){
         this.pageSize = pageSize;this.chunkSize = chunkSize;
         this.bufferInAll = bufferInAll;
         maxSubpageAllocs = chunkSize / pageSize;
@@ -33,7 +34,7 @@ public class AbstractChunk implements JChunk {
         memoryMap = new byte[maxSubpageAllocs<<1];
         depthMap = new byte[maxSubpageAllocs<<1];
         log2ChunkSize = log2(chunkSize);
-        //this.jBufferPool = jBufferPool;
+        this.jBufferPool = jBufferPool;
         int memoryMapIndex = 1;
         for (int d = 0; d <= maxOrder; ++ d) { // move down the tree one level at a time
             int depth = 1 << d;
@@ -59,15 +60,43 @@ public class AbstractChunk implements JChunk {
         bufferInAll.limit(offset+pageSize);
         ByteBuffer tmp = bufferInAll.slice();
         tmp.limit(pageSize);
-        return new ByteBuf(tmp,handle);
+        return new ByteBuf(tmp,handle,this);
     }
 
     @Override
     public ByteBuf ApplyBufferByCapacity(int capacity) {
-        int handle = getHandle(capacity);
-        return ApplyBufferByHandle(handle);
+        int reqCapacity = capacity<pageSize?pageSize:capacity;
+        int handle = getHandle(reqCapacity);
+        ByteBuf byteBuf = ApplyBufferByHandle(handle);
+        if (capacity<pageSize){
+            PoolSubpage poolSubpage = new PoolSubpage(byteBuf,handle,capacity,pageSize);
+            return poolSubpage.allocate();
+        }else{
+            return byteBuf;
+        }
     }
 
+    @Override
+    public void free(long handle) {
+        if (handle>Integer.MAX_VALUE){
+            freeSubpage((int)(handle>>>32));
+        }else{
+            freeNormalPage((int)handle);
+        }
+    }
+
+    @Override
+    public JBufferPool getBufferPool() {
+        return jBufferPool;
+    }
+
+    private void freeSubpage(int bitmapIdx){
+
+    }
+
+    private void freeNormalPage(int memoryMapIndex){
+
+    }
     @Override
     public int getHandle(int capacity){
         int depth = getDepth(capacity);
@@ -184,7 +213,7 @@ public class AbstractChunk implements JChunk {
     }
 
     public static void main(String[] args){
-        AbstractChunk abstractChunk = new AbstractChunk(8192,8192*2048,ByteBuffer.allocate(8192*2048));
-        System.out.println(abstractChunk.runLength(512));
+        //AbstractChunk abstractChunk = new AbstractChunk(8192,8192*2048,ByteBuffer.allocate(8192*2048));
+        //System.out.println(abstractChunk.runLength(512));
     }
 }
