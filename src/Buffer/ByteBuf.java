@@ -9,8 +9,8 @@ public class ByteBuf extends AbstractBuffer{
     ByteBuf(ByteBuffer innerBuffer,long handle,JChunk chunk) {
         super(innerBuffer,handle,chunk);
     }
-    ByteBuf(JBuffer jBuffer,ByteBuffer innerBuffer){
-        super(jBuffer,innerBuffer);
+    ByteBuf(ByteBuffer innerBuffer,PoolSubpage poolSubpage,int size){
+        super(innerBuffer,poolSubpage,size);
     }
 
 }

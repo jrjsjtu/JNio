@@ -78,11 +78,7 @@ public class AbstractChunk implements JChunk {
 
     @Override
     public void free(long handle) {
-        if (handle>Integer.MAX_VALUE){
-            freeSubpage((int)(handle>>>32));
-        }else{
-            freeNormalPage((int)handle);
-        }
+
     }
 
     @Override
@@ -90,13 +86,6 @@ public class AbstractChunk implements JChunk {
         return jBufferPool;
     }
 
-    private void freeSubpage(int bitmapIdx){
-
-    }
-
-    private void freeNormalPage(int memoryMapIndex){
-
-    }
     @Override
     public int getHandle(int capacity){
         int depth = getDepth(capacity);

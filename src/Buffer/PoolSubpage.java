@@ -64,8 +64,24 @@ public class PoolSubpage<T> {
         }
         return -1;
     }
+
     ByteBuf allocate(){
         int idx = findNextAvailable();
         return byteBuf.allocateSubpage(idx*elementSize,elementSize);
+    }
+
+    void freeSubpage(long handle){
+        curAvailable++;
+        if (curAvailable == maxAvailableNum){
+            byteBuf.free();
+        }else{
+            int subpageIdx = (int)(handle>>>32);
+            int idx = subpageIdx>>>6;
+            long tmpIdx = subpageIdx & 0x3F;
+            pageMap[idx] ^= (1l<<tmpIdx);
+        }
+        if (curAvailable == 1){
+            byteBuf.chunk.getBufferPool().addPool(this,elementSize);
+        }
     }
 }

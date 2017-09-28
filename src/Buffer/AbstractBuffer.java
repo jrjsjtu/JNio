@@ -11,16 +11,18 @@ public class AbstractBuffer implements JBuffer {
     long handle;
     JChunk chunk;
     //这个parentBuffer只有在当前buffer为subpage时才用的到
-    JBuffer parentBuffer;
+    PoolSubpage parentPoolSubpage;
+    int size;
     AbstractBuffer(ByteBuffer innerBuffer,long handle,JChunk chunk){
         this.innerBuffer = innerBuffer;
         this.handle = handle;
         this.chunk = chunk;
     }
     //这个构造函数只有在当前buffer为subpage时才用的到
-    AbstractBuffer(JBuffer jBuffer,ByteBuffer innerBuffer){
+    AbstractBuffer(ByteBuffer innerBuffer,PoolSubpage parentPoolSubpage,int size){
         this.innerBuffer = innerBuffer;
-        this.parentBuffer = jBuffer;
+        this.parentPoolSubpage = parentPoolSubpage;
+        this.size = size;
     }
     @Override
     public void put() {
@@ -49,7 +51,14 @@ public class AbstractBuffer implements JBuffer {
 
     @Override
     public void free() {
-        chunk.free(handle);
+        //此处应该有threadLocal的考虑
+        if (parentPoolSubpage == null){
+            chunk.free(handle);
+        }else{
+            if (!AbstractAllocator.value.get().appendSubpage(this,size)){
+                parentPoolSubpage.freeSubpage(handle);
+            }
+        }
     }
 
     @Override
@@ -57,6 +66,6 @@ public class AbstractBuffer implements JBuffer {
         innerBuffer.position(startPostion);
         innerBuffer.limit(startPostion+size);
         ByteBuffer tmp = innerBuffer.slice();
-        return new ByteBuf(this,tmp);
+        return new ByteBuf(tmp,parentPoolSubpage,size);
     }
 }
