@@ -76,10 +76,9 @@ public class JEventLoop extends  SingleThreadEventLoop {
                             e.printStackTrace();
                         } finally{
                         }
-                    }else{
                     }
+                    iter.remove();
                 }
-                iter.remove();
             }
             while (hasTask()){
                 try {
