@@ -4,6 +4,8 @@ import Channel.ChannelInitializer;
 import Channel.JServerSocketChannel;
 import EventLoopGroup.EventLoopGroup;
 import EventLoopGroup.JNioEventLoopGroup;
+import FutureAndPromise.ChannelFuture;
+import FutureAndPromise.ChannelFutureListener;
 import Handler.ChannelHandlerContext;
 import Handler.ChannelInboundHandlerAdapter;
 
@@ -35,8 +37,17 @@ public class test {
     public static class echoServer extends ChannelInboundHandlerAdapter{
         @Override
         public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-            ctx.writeAndFlush(msg);
-            System.out.println(msg.toString());
+            ctx.writeAndFlush(msg).addListener(new ChannelFutureListener() {
+                @Override
+                public void operationComplete(ChannelFuture future) throws Exception {
+                    if (!future.isSuccess()) {
+                        System.out.println("Send packet failure");
+                    }else{
+                        System.out.println("Send packet success");
+                    }
+                }
+            });
+            System.out.println("???");
         }
     }
 }

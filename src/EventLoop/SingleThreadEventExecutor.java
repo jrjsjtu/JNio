@@ -61,7 +61,7 @@ public abstract class SingleThreadEventExecutor {
         }
     }
 
-    public void addTask(RunnableFuture task){
+    public void addTask(Runnable task){
         taskQueue.add(task);
     }
 }

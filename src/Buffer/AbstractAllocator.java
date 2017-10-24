@@ -9,6 +9,7 @@ import static Buffer.JChunk.rTinyMask;
  * Created by jrj on 17-9-15.
  */
 public class AbstractAllocator implements JAllocator {
+    //chunklist之间的调整还没有做
     public static final ThreadLocal<CacheThreadLocal> value = new ThreadLocal<CacheThreadLocal>() {
         @Override
         protected CacheThreadLocal initialValue() {

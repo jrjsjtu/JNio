@@ -11,6 +11,8 @@ import java.util.concurrent.TimeoutException;
  * Created by jrj on 17-9-8.
  */
 public class DefaultChannelPromise implements ChannelPromise {
+    GenericFutureListener genericFutureListener = null;
+    private int state = 0;
     @Override
     public Channel channel() {
         return null;
@@ -28,6 +30,12 @@ public class DefaultChannelPromise implements ChannelPromise {
 
     @Override
     public ChannelPromise setSuccess() {
+        state = 1;
+        try {
+            genericFutureListener.operationComplete(this);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         return null;
     }
 
@@ -53,7 +61,7 @@ public class DefaultChannelPromise implements ChannelPromise {
 
     @Override
     public boolean isSuccess() {
-        return false;
+        return state == 0?false:true;
     }
 
     @Override
@@ -68,7 +76,8 @@ public class DefaultChannelPromise implements ChannelPromise {
 
     @Override
     public ChannelPromise addListener(GenericFutureListener<? extends Future<? super Void>> listener) {
-        return null;
+        this.genericFutureListener = listener;
+        return this;
     }
 
     @Override

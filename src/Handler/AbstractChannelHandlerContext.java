@@ -151,11 +151,16 @@ public abstract class AbstractChannelHandlerContext implements ChannelHandlerCon
     public ChannelFuture writeAndFlush(Object msg){
         AbstractChannelHandlerContext ctx = findNextOutbound();
         DefaultChannelPromise defaultChannelPromise = new DefaultChannelPromise();
-        try {
-            ((ChannelOutboundHandler)ctx.handler()).write(ctx,msg,defaultChannelPromise);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        eventLoopBinded.submit(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    ((ChannelOutboundHandler)ctx.handler()).write(ctx,msg,defaultChannelPromise);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        });
         return defaultChannelPromise;
     }
     @Override

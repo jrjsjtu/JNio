@@ -78,7 +78,10 @@ public class AbstractChunk implements JChunk {
 
     @Override
     public void free(long handle) {
-
+        int memoryMapIdx = (int) handle;
+        setValue(memoryMapIdx, depth(memoryMapIdx));
+        // 修改其父节点的值
+        updateParentsFree(memoryMapIdx);
     }
 
     @Override

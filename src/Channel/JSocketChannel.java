@@ -42,5 +42,4 @@ public class JSocketChannel extends AbstractNioChannel {
     public Unsafe unsafe() {
         return innerUnsafe;
     }
-
 }

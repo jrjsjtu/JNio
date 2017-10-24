@@ -31,7 +31,10 @@ public abstract class AbstractNioChannel extends AbstractChannel{
             e.printStackTrace();
         }
     }
+    @Override
+    public void close() {
 
+    }
     protected class NioUnsafe implements Unsafe{
         @Override
         public SocketAddress localAddress() {

@@ -75,8 +75,6 @@ public class JEventLoop extends  SingleThreadEventLoop {
                         }catch (Exception e){
                             e.printStackTrace();
                         } finally{
-                            if (buffer != null)
-                                buffer.clear();
                         }
                     }else{
                     }

@@ -78,12 +78,11 @@ public abstract class SingleThreadEventLoop extends SingleThreadEventExecutor im
         return newTask;
     }
 
-    @NotNull
+
     @Override
     public Future<?> submit(@NotNull Runnable task) {
-        RunnableFuture newTask = new FutureTask(task,null);
-        addTask(newTask);
-        return newTask;
+        addTask(task);
+        return null;
     }
 
     @NotNull

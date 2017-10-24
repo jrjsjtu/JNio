@@ -13,4 +13,5 @@ public interface Channel {
     Unsafe unsafe();
     ChannelPipeline pipeline();
     EventLoop getEventLoop();
+    void close();
 }
